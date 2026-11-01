@@ -4,13 +4,13 @@
 #   Not linked:  Codex runs headless (codex exec) in the worktree; same result, no chat to watch.
 # The work happens in .worktrees/<id> on branch agent/<id>. Codex's final reply is saved to
 # docs/continuity/tasks/<id>.report.md.
-# Usage: foreman task <id> <brief.md> [effort: medium|high|xhigh] [base-ref] [timeout-min]
+# Usage: claudexus task <id> <brief.md> [effort: medium|high|xhigh] [base-ref] [timeout-min]
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 id=${1:?task id}; brief=${2:?brief file}; effort=${3:-medium}; base=${4:-HEAD}; limit=${5:-180}
-repo=$(foreman_repo); py="python3 $FOREMAN_HOME/bin/_codex_state.py"
-codex=$(foreman_codex); model=$(foreman_model)
-[ -n "$codex" ] && [ -x "$codex" ] || { echo "Codex CLI not found: run foreman doctor" >&2; exit 1; }
+repo=$(claudexus_repo); py="python3 $CLAUDEXUS_HOME/bin/_codex_state.py"
+codex=$(claudexus_codex); model=$(claudexus_model)
+[ -n "$codex" ] && [ -x "$codex" ] || { echo "Codex CLI not found: run claudexus doctor" >&2; exit 1; }
 tree="$repo/.worktrees/$id"; report="$repo/docs/continuity/tasks/$id.report.md"
 gitdir=$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)
 [ -d "$tree" ] || git -C "$repo" worktree add -b "agent/$id" "$tree" "$base"
@@ -42,9 +42,9 @@ if [ -f "$repo/.team/codex-thread-id" ]; then
   done
   echo "timed out after $limit min; Codex may still be working (check the chat)" >&2; exit 2
 else
-  echo "no shared chat linked: running Codex headless (see 'foreman link' to watch tasks in the Codex app)…"
+  echo "no shared chat linked: running Codex headless (see 'claudexus link' to watch tasks in the Codex app)…"
   args=(exec -c "model_reasoning_effort=\"$effort\"" -s workspace-write -C "$tree" --add-dir "$gitdir" -o "$report")
   [ -n "$model" ] && args+=(-m "$model")
-  printf '%s' "$msg" | "$codex" "${args[@]}" - >"/tmp/foreman-$id.log" 2>&1
-  echo "done · report $report · changes in $tree (log /tmp/foreman-$id.log)"
+  printf '%s' "$msg" | "$codex" "${args[@]}" - >"/tmp/claudexus-$id.log" 2>&1
+  echo "done · report $report · changes in $tree (log /tmp/claudexus-$id.log)"
 fi

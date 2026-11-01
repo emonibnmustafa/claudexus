@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reads and (carefully) updates Codex's local state for Foreman. Standard library only.
+"""Reads and (carefully) updates Codex's local state for Claudexus. Standard library only.
 
 Uses Codex internals (its SQLite thread index and session logs), which may change between Codex versions.
 Everything that writes makes a backup first.
@@ -12,13 +12,13 @@ CODEX = os.path.join(HOME, ".codex")
 def db_path():
     files = sorted(glob.glob(os.path.join(CODEX, "state_*.sqlite")), key=os.path.getmtime)
     if not files:
-        sys.exit("foreman: no Codex state database found in ~/.codex (is Codex installed and used once?)")
+        sys.exit("claudexus: no Codex state database found in ~/.codex (is Codex installed and used once?)")
     return files[-1]
 
 def connect(write=False):
     path = db_path()
     if write:
-        backups = os.path.join(HOME, ".config", "foreman", "backups")
+        backups = os.path.join(HOME, ".config", "claudexus", "backups")
         os.makedirs(backups, exist_ok=True)
         shutil.copy2(path, os.path.join(backups, "%s.%d" % (os.path.basename(path), int(time.time()))))
     return sqlite3.connect(path, timeout=10)
@@ -26,7 +26,7 @@ def connect(write=False):
 def rollout(thread):
     row = connect().execute("select rollout_path from threads where id=?", (thread,)).fetchone()
     if not row:
-        sys.exit("foreman: Codex thread %s not found" % thread)
+        sys.exit("claudexus: Codex thread %s not found" % thread)
     return row[0]
 
 def policy(repo):
@@ -55,7 +55,7 @@ def main():
         repo = os.path.realpath(args[0])
         db = connect()
         row = db.execute("select id, name from threads where cwd=? and archived=0 and originator='Codex Desktop' "
-                         "and (name like 'Foreman%' or preview like 'Foreman%' or name like 'Claude%Codex%') order by created_at_ms desc limit 1", (repo,)).fetchone()
+                         "and (name like 'Claudexus%' or preview like 'Claudexus%' or name like 'Claude%Codex%') order by created_at_ms desc limit 1", (repo,)).fetchone()
         if not row:
             sys.exit(1)
         db = connect(True)
@@ -76,7 +76,7 @@ def main():
             if limits:
                 break
         if not limits:
-            sys.exit("foreman: no Codex usage data yet (run a Codex task first)")
+            sys.exit("claudexus: no Codex usage data yet (run a Codex task first)")
         for key, label in (("primary", "5-hour"), ("secondary", "weekly")):
             w = limits.get(key) or {}
             when = datetime.datetime.fromtimestamp(w.get("resets_at", 0)).strftime("%a %H:%M")

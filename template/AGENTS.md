@@ -1,7 +1,7 @@
 # AGENTS.md — {{PROJECT}}
 
 Shared instructions for every AI engineer on this repository. The team protocol (roles, delegation, handoff,
-permissions) is in `~/.foreman/protocol.md`, loaded globally; this file holds the project's own facts and wins on conflicts.
+permissions) is in `~/.claudexus/protocol.md`, loaded globally; this file holds the project's own facts and wins on conflicts.
 
 ## 1. Product
 <!-- What it is, who it is for, current stage. -->

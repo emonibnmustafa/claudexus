@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# claudexus — Claude Code leads, Codex works. Usage: claudexus <init|link|task|usage|doctor> [args]
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+cmd="${1:-help}"; shift 2>/dev/null || true
+case "$cmd" in
+  init|link|task|usage|doctor) exec "$here/claudexus-$cmd" "$@" ;;
+  *) cat <<USAGE
+claudexus — Claude Code leads, Codex works.
+
+  claudexus init                  set up Claudexus in the current repository
+  claudexus link                  link the Codex-app chat you created for this repo
+  claudexus task <id> <brief.md> [medium|high|xhigh] [base-ref] [timeout-min]
+                                hand a task to Codex in its own git worktree
+  claudexus usage                 Codex 5-hour and weekly usage
+  claudexus doctor                check requirements
+USAGE
+  ;;
+esac

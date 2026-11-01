@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Sets up Foreman in the current git repository. Never overwrites existing files.
+# Sets up Claudexus in the current git repository. Never overwrites existing files.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 git rev-parse --show-toplevel >/dev/null 2>&1 || git init -q
 repo=$(git rev-parse --show-toplevel); name=$(basename "$repo"); today=$(date +%Y-%m-%d)
 
-cd "$FOREMAN_HOME/template"
+cd "$CLAUDEXUS_HOME/template"
 find . -type f | sed 's|^\./||' | while IFS= read -r f; do
   if [ -e "$repo/$f" ]; then echo "kept   $f"; continue; fi
   mkdir -p "$repo/$(dirname "$f")"
@@ -20,6 +20,6 @@ cat <<MSG
 Next:
   1. Claude fills AGENTS.md from your code.
   2. You: in the Codex app, open this project and start a new chat with exactly:
-       Foreman ↔ Codex · $name — shared work log. Reply "ready" only.
-  3. Then run: foreman link
+       Claudexus ↔ Codex · $name — shared work log. Reply "ready" only.
+  3. Then run: claudexus link
 MSG

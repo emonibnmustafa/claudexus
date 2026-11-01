@@ -1,8 +1,10 @@
-# Foreman
+# Claudexus
 
 **Claude runs the crew. Codex does the work.**
 
-You pay for Claude *and* Codex, but you still babysit both. Foreman turns them into one engineering team: **Claude Code is the lead** who plans, delegates and reviews; **Codex is the engineer** who builds. They share one project memory, watch each other's usage limits, and hand work over cleanly when a limit runs out. You give a goal and come back to finished work.
+*Claudexus = Claude + Codex + nexus: the hub that connects them.*
+
+You pay for Claude *and* Codex, but you still babysit both. Claudexus turns them into one engineering team: **Claude Code is the lead** who plans, delegates and reviews; **Codex is the engineer** who builds. They share one project memory, watch each other's usage limits, and hand work over cleanly when a limit runs out. You give a goal and come back to finished work.
 
 ```
 you ──goal──▶ Claude (lead) ──brief──▶ Codex (engineer, own git worktree)
@@ -24,29 +26,29 @@ you ──goal──▶ Claude (lead) ──brief──▶ Codex (engineer, own 
 
 **Ask Claude to do it.** Paste this into Claude Code:
 
-> Install Foreman: run `git clone --depth 1 https://github.com/emonibnmustafa/foreman ~/.foreman && ~/.foreman/install.sh`, then run `foreman doctor` and tell me the result.
+> Install Claudexus: run `git clone --depth 1 https://github.com/emonibnmustafa/claudexus ~/.claudexus && ~/.claudexus/install.sh`, then run `claudexus doctor` and tell me the result.
 
 **Or by hand:**
 
 ```sh
-git clone --depth 1 https://github.com/emonibnmustafa/foreman ~/.foreman
-~/.foreman/install.sh
-foreman doctor
+git clone --depth 1 https://github.com/emonibnmustafa/claudexus ~/.claudexus
+~/.claudexus/install.sh
+claudexus doctor
 ```
 
-You need: `git`, `python3`, [Claude Code](https://claude.com/claude-code), and [Codex](https://developers.openai.com/codex) (desktop app recommended). Foreman auto-detects the Codex CLI; see [Configuration](#configuration) to change that.
+You need: `git`, `python3`, [Claude Code](https://claude.com/claude-code), and [Codex](https://developers.openai.com/codex) (desktop app recommended). Claudexus auto-detects the Codex CLI; see [Configuration](#configuration) to change that.
 
 ## Use it
 
 In any project, open Claude Code and type:
 
 ```
-/foreman
+/claudexus
 ```
 
 Claude sets the project up (`AGENTS.md` filled in from your actual code, shared memory in `docs/continuity/`), then asks you for one thing: **create a chat in the Codex app inside that project** with the message it gives you, and say "done". After that, hand Claude a goal and walk away.
 
-Codex can run it too: `$foreman`.
+Codex can run it too: `$claudexus`.
 
 ## What's in your repo afterwards
 
@@ -63,11 +65,11 @@ Codex can run it too: `$foreman`.
 
 | Command | Does |
 |---|---|
-| `foreman init` | Adds the structure to the current repo. Never overwrites a file. |
-| `foreman link` | Connects the Codex-app chat you created to this repo. |
-| `foreman task <id> <brief.md> [medium\|high\|xhigh]` | Gives Codex a task in `.worktrees/<id>`, waits, saves its report. |
-| `foreman usage` | Codex 5-hour and weekly usage and reset times. |
-| `foreman doctor` | Checks that everything is installed. |
+| `claudexus init` | Adds the structure to the current repo. Never overwrites a file. |
+| `claudexus link` | Connects the Codex-app chat you created to this repo. |
+| `claudexus task <id> <brief.md> [medium\|high\|xhigh]` | Gives Codex a task in `.worktrees/<id>`, waits, saves its report. |
+| `claudexus usage` | Codex 5-hour and weekly usage and reset times. |
+| `claudexus doctor` | Checks that everything is installed. |
 
 ## How the handoff works
 
@@ -75,25 +77,25 @@ Nobody can write a note *after* a usage limit cuts them off, so the protocol wri
 
 ## Configuration
 
-Optional, in `~/.config/foreman/config.sh`:
+Optional, in `~/.config/claudexus/config.sh`:
 
 ```sh
-FOREMAN_CODEX=/path/to/codex            # which Codex CLI to drive
-FOREMAN_CODEX_MODEL=your-model-name     # default: the model in ~/.codex/config.toml
+CLAUDEXUS_CODEX=/path/to/codex            # which Codex CLI to drive
+CLAUDEXUS_CODEX_MODEL=your-model-name     # default: the model in ~/.codex/config.toml
 ```
 
-Personal preferences (reply language, tone, house rules) go in `~/.config/foreman/owner.md`; both agents read it. Your own lessons accumulate in `~/.config/foreman/LESSONS.md`.
+Personal preferences (reply language, tone, house rules) go in `~/.config/claudexus/owner.md`; both agents read it. Your own lessons accumulate in `~/.config/claudexus/LESSONS.md`.
 
 ## Honest limits
 
 - **Early and experimental.** Built and used daily on macOS with the Codex desktop app. Linux works with the Codex CLI (tasks run headless, without a chat to watch). Windows is untested.
-- **Relies on Codex internals.** Linking a chat and reading usage use Codex's local index and session logs, which can change between Codex versions. `foreman link` backs the index up first (`~/.config/foreman/backups`). If something breaks, open an issue with your `foreman doctor` output.
+- **Relies on Codex internals.** Linking a chat and reading usage use Codex's local index and session logs, which can change between Codex versions. `claudexus link` backs the index up first (`~/.config/claudexus/backups`). If something breaks, open an issue with your `claudexus doctor` output.
 - **Claude can't switch its own model mid-session.** It shifts load to cheaper subagents and Codex instead.
 - **Not affiliated** with Anthropic or OpenAI. Claude and Codex are their products and subject to their terms and plan limits.
 
 ## Uninstall
 
-`~/.foreman/uninstall.sh` removes the global rules and skills. Your projects' files stay.
+`~/.claudexus/uninstall.sh` removes the global rules and skills. Your projects' files stay.
 
 ## Contributing
 
