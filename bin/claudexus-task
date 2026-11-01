@@ -4,13 +4,16 @@
 #   Not linked:  Codex runs headless (codex exec) in the worktree; same result, no chat to watch.
 # The work happens in .worktrees/<id> on branch agent/<id>. Codex's final reply is saved to
 # docs/continuity/tasks/<id>.report.md.
-# Usage: claudexus task <id> <brief.md> [effort: medium|high|xhigh] [base-ref] [timeout-min]
+# Usage: claudexus task [--agent codex|opencode] <id> <brief.md> [effort: medium|high|xhigh] [base-ref] [timeout-min]
+#   --agent opencode runs the task with OpenCode (headless, in the worktree). Its session is titled with the task id.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
+agent=codex
+if [ "${1:-}" = "--agent" ]; then agent=${2:?agent name}; shift 2; fi
 id=${1:?task id}; brief=${2:?brief file}; effort=${3:-medium}; base=${4:-HEAD}; limit=${5:-180}
 repo=$(claudexus_repo); py="python3 $CLAUDEXUS_HOME/bin/_codex_state.py"
 codex=$(claudexus_codex); model=$(claudexus_model)
-[ -n "$codex" ] && [ -x "$codex" ] || { echo "Codex CLI not found: run claudexus doctor" >&2; exit 1; }
+if [ "$agent" = codex ]; then [ -n "$codex" ] && [ -x "$codex" ] || { echo "Codex CLI not found: run claudexus doctor" >&2; exit 1; }; fi
 tree="$repo/.worktrees/$id"; report="$repo/docs/continuity/tasks/$id.report.md"
 gitdir=$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)
 [ -d "$tree" ] || git -C "$repo" worktree add -b "agent/$id" "$tree" "$base"
@@ -28,7 +31,20 @@ Standing rules for this delegated task:
 - Verify what the brief asks (build/tests/screenshots). Never claim a check you did not run.
 - Final message = a short report to Claude: what changed (files), what you verified and how, what is uncertain or left, and any decision you need."
 
-if [ -f "$repo/.team/codex-thread-id" ]; then
+if [ "$agent" = opencode ]; then
+  oc=$(claudexus_opencode); [ -n "$oc" ] || { echo "OpenCode CLI not found (set CLAUDEXUS_OPENCODE)" >&2; exit 1; }
+  ocm=${CLAUDEXUS_OPENCODE_MODEL:-}
+  msg="$msg
+- (OpenCode) Begin your final message with a line containing only: REPORT"
+  echo "running OpenCode${ocm:+ ($ocm)} headless in the worktree…"
+  oargs=(run --auto --title "claudexus: $id"); [ -n "$ocm" ] && oargs+=(-m "$ocm")
+  ( cd "$tree" && printf '%s' "$msg" | "$oc" "${oargs[@]}" ) > "/tmp/claudexus-$id.log" 2>&1 || true
+  sed 's/\x1b\[[0-9;]*m//g' "/tmp/claudexus-$id.log" | grep -v '^> ' > "/tmp/claudexus-$id.clean"
+  # The report is everything after the last REPORT line (or the whole output if there is none).
+  awk '/^REPORT$/{buf=""; found=1; next} {buf=buf $0 "\n"} END{if(found) printf "%s", buf}' "/tmp/claudexus-$id.clean" > "$report"
+  [ -s "$report" ] || cp "/tmp/claudexus-$id.clean" "$report"
+  echo "done · report $report · changes in $tree (log /tmp/claudexus-$id.log)"
+elif [ -f "$repo/.team/codex-thread-id" ]; then
   thread=$(cat "$repo/.team/codex-thread-id"); log=$($py log "$thread")
   $py effort "$thread" "$effort"           # the app reads the chat's effort when the next turn starts
   before=$($py done-count "$log")

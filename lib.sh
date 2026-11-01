@@ -25,3 +25,12 @@ claudexus_model() {
 }
 
 claudexus_repo() { git rev-parse --show-toplevel 2>/dev/null || { echo "claudexus: run this inside a git repository" >&2; return 1; }; }
+
+# OpenCode CLI (optional second engineer; free models work well for low-risk tasks).
+claudexus_opencode() {
+  if [ -n "${CLAUDEXUS_OPENCODE:-}" ]; then echo "$CLAUDEXUS_OPENCODE"; return; fi
+  if command -v opencode >/dev/null 2>&1; then command -v opencode; return; fi
+  local c; for c in /Applications/OpenCode.app/Contents/Resources/opencode-cli "$HOME/Applications/OpenCode.app/Contents/Resources/opencode-cli"; do
+    if [ -x "$c" ]; then echo "$c"; return; fi
+  done
+}

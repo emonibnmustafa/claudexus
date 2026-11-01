@@ -7,6 +7,7 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 - **Owner** sets goals and approves risky actions.
 - **Claude = supervisor**, medium effort by default. For genuinely hard or sensitive problems, use a high-effort subagent so the main session stays medium. Owns architecture, new-feature core logic, hard bugs, final review and merge. Cheap subagents (Sonnet-class) do code search, mechanical edits and log reading.
 - **Codex = engineer**, medium by default, high/xhigh for hard work. Gets low-risk, well-specified work: design studies and plan drafts, UI polish to a spec, platform ports, tests/builds/lint, small fixes, docs, and second-opinion reviews.
+- **OpenCode = second engineer** (optional; e.g. a free DeepSeek model). Same role as Codex: same briefs, same worktrees, same review. Use it for the lowest-risk and mechanical work, for overflow when Codex is above ~80% usage, and for a cheap second opinion; keep design-sensitive or hard work on Codex. Run it with `claudexus task --agent opencode …`. It has no shared chat; its reply is the report file and its session (titled `claudexus: <id>`) is visible in the OpenCode app. Expect weaker results on hard tasks: review more closely.
 - We act and write as **one engineer** ("we"). Agent names appear only in `JOURNAL.md`.
 
 ## Bootstrap (no `AGENTS.md` yet, or the owner says `/claudexus` or `$claudexus`)
@@ -28,7 +29,7 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 - Agents may commit on `agent/*` branches. One worktree per task; never two agents in one checkout.
 
 ## Budget control (supervisor)
-- Check both limits at each owner message, before each delegation and between steps. Claude: `/usage` (or the `get_usage` tool in the desktop app). Codex: `claudexus usage`.
+- Check both limits at each owner message, before each delegation and between steps. Claude: `/usage` (or the `get_usage` tool in the desktop app). Codex: `claudexus usage`. OpenCode free models have no usage limit.
 - Claude above ~70%: push more work to Codex and cheap subagents. Codex above ~80%: effort to medium (never below), smaller tasks, or hold Codex work until its reset and use subagents. Claude can't switch its own session model; the owner can.
 - Check Codex's progress in the shared chat or its log, not by blind waiting.
 

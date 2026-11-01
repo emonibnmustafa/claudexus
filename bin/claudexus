@@ -9,8 +9,8 @@ claudexus — Claude Code leads, Codex works.
 
   claudexus init                  set up Claudexus in the current repository
   claudexus link                  link the Codex-app chat you created for this repo
-  claudexus task <id> <brief.md> [medium|high|xhigh] [base-ref] [timeout-min]
-                                hand a task to Codex in its own git worktree
+  claudexus task [--agent codex|opencode] <id> <brief.md> [medium|high|xhigh] [base-ref] [timeout-min]
+                                hand a task to Codex (default) or OpenCode in its own git worktree
   claudexus usage                 Codex 5-hour and weekly usage
   claudexus doctor                check requirements
 USAGE

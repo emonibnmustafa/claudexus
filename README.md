@@ -67,7 +67,7 @@ Codex can run it too: `$claudexus`.
 |---|---|
 | `claudexus init` | Adds the structure to the current repo. Never overwrites a file. |
 | `claudexus link` | Connects the Codex-app chat you created to this repo. |
-| `claudexus task <id> <brief.md> [medium\|high\|xhigh]` | Gives Codex a task in `.worktrees/<id>`, waits, saves its report. |
+| `claudexus task [--agent opencode] <id> <brief.md> [medium\|high\|xhigh]` | Gives Codex (or OpenCode) a task in `.worktrees/<id>`, waits, saves its report. |
 | `claudexus usage` | Codex 5-hour and weekly usage and reset times. |
 | `claudexus doctor` | Checks that everything is installed. |
 
@@ -83,6 +83,8 @@ Optional, in `~/.config/claudexus/config.sh`:
 CLAUDEXUS_CODEX=/path/to/codex            # which Codex CLI to drive
 CLAUDEXUS_CODEX_MODEL=your-model-name     # default: the model in ~/.codex/config.toml
 ```
+
+`CLAUDEXUS_OPENCODE` and `CLAUDEXUS_OPENCODE_MODEL` (for example a free DeepSeek model) enable OpenCode as a second engineer.
 
 Personal preferences (reply language, tone, house rules) go in `~/.config/claudexus/owner.md`; both agents read it. Your own lessons accumulate in `~/.config/claudexus/LESSONS.md`.
 
