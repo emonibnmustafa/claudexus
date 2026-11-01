@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Hands one task to Codex.
+#   Linked repo: the brief goes into the shared Codex-app chat (you can watch it there).
+#   Not linked:  Codex runs headless (codex exec) in the worktree; same result, no chat to watch.
+# The work happens in .worktrees/<id> on branch agent/<id>. Codex's final reply is saved to
+# docs/continuity/tasks/<id>.report.md.
+# Usage: foreman task <id> <brief.md> [effort: medium|high|xhigh] [base-ref] [timeout-min]
+set -euo pipefail
+. "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
+id=${1:?task id}; brief=${2:?brief file}; effort=${3:-medium}; base=${4:-HEAD}; limit=${5:-180}
+repo=$(foreman_repo); py="python3 $FOREMAN_HOME/bin/_codex_state.py"
+codex=$(foreman_codex); model=$(foreman_model)
+[ -n "$codex" ] && [ -x "$codex" ] || { echo "Codex CLI not found: run foreman doctor" >&2; exit 1; }
+tree="$repo/.worktrees/$id"; report="$repo/docs/continuity/tasks/$id.report.md"
+gitdir=$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)
+[ -d "$tree" ] || git -C "$repo" worktree add -b "agent/$id" "$tree" "$base"
+mkdir -p "$(dirname "$report")"
+
+msg="[Claude → Codex · task $id · effort $effort]
+Work only in this git worktree: $tree (branch agent/$id). cd there first.
+
+$(cat "$brief")
+
+---
+Standing rules for this delegated task:
+- Read AGENTS.md first and follow its conventions. Stay inside the worktree named above.
+- Leave your changes uncommitted unless the brief says otherwise; the supervisor reviews and commits. Never push or touch the main checkout.
+- Verify what the brief asks (build/tests/screenshots). Never claim a check you did not run.
+- Final message = a short report to Claude: what changed (files), what you verified and how, what is uncertain or left, and any decision you need."
+
+if [ -f "$repo/.team/codex-thread-id" ]; then
+  thread=$(cat "$repo/.team/codex-thread-id"); log=$($py log "$thread")
+  $py effort "$thread" "$effort"           # the app reads the chat's effort when the next turn starts
+  before=$($py done-count "$log")
+  "$codex" queue --thread "$thread" --message "$msg" >/dev/null
+  echo "queued task $id into the shared chat; waiting for Codex (up to $limit min)…"
+  for (( i = 0; i < limit * 3; i++ )); do
+    sleep 20
+    if [ "$($py done-count "$log")" -gt "$before" ]; then
+      $py last-message "$log" > "$report"; echo "done · report $report · changes in $tree"; exit 0
+    fi
+  done
+  echo "timed out after $limit min; Codex may still be working (check the chat)" >&2; exit 2
+else
+  echo "no shared chat linked: running Codex headless (see 'foreman link' to watch tasks in the Codex app)…"
+  args=(exec -c "model_reasoning_effort=\"$effort\"" -s workspace-write -C "$tree" --add-dir "$gitdir" -o "$report")
+  [ -n "$model" ] && args+=(-m "$model")
+  printf '%s' "$msg" | "$codex" "${args[@]}" - >"/tmp/foreman-$id.log" 2>&1
+  echo "done · report $report · changes in $tree (log /tmp/foreman-$id.log)"
+fi

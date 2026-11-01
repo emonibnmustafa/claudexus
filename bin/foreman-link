@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Links the chat you created in the Codex app to this repo, so tasks show up there.
+set -euo pipefail
+. "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
+repo=$(foreman_repo)
+if ! row=$(python3 "$FOREMAN_HOME/bin/_codex_state.py" link "$repo"); then
+  cat >&2 <<MSG
+No chat found. In the Codex app, open this project and start a NEW chat whose first message is exactly:
+  Foreman ↔ Codex · $(basename "$repo") — shared work log. Reply "ready" only.
+Wait for the reply, then run foreman link again.
+(Chats created from the command line are hidden by the app, so this one has to be made in the app.)
+MSG
+  exit 1
+fi
+mkdir -p "$repo/.team"; echo "${row%%|*}" > "$repo/.team/codex-thread-id"
+echo "linked shared chat ${row%%|*} (${row#*|}). A backup of Codex's index is in ~/.config/foreman/backups."

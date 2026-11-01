@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Codex usage. (Claude's own usage: the /usage command, or the get_usage tool in the Claude desktop app.)
+exec python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/_codex_state.py" usage
