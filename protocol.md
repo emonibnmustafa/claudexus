@@ -36,6 +36,9 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 ## Handoff
 Don't write continuity files continuously; it burns usage. At **95%** of the 5-hour limit (or when told "handoff"), write the full handoff once into `docs/continuity/CURRENT.md` plus a `JOURNAL.md` entry; above 90% start no big new step. A handoff contains: the owner's request verbatim with later scope changes, approvals and prohibitions; numbered steps with status (`planned → in progress → implemented → verified`, `blocked`, `needs decision`); the exact next action; decisions and reasons; assumptions kept apart from owner instructions; changed **and untracked** files; what was verified on which commit; open questions; both agents' reset times.
 
+**Fresh chat at the right moment:** a long chat re-sends its whole context every turn and burns usage fast. Right after a big task is finished (merged or pushed), when the context passes about 300–400k tokens, or when the topic changes (never while an agent or watch is mid-task), write the handoff yourself. Then tell the owner it's a good moment for a new chat, and give them the exact first message:
+`continue — read AGENTS.md, docs/continuity/CURRENT.md and the last JOURNAL.md entries, check git status, restart claudexus watch if an agent is working, then continue the next action.`
+
 **Session start:** read `AGENTS.md` → `CURRENT.md` → recent `JOURNAL.md` → `~/.claudexus/LESSONS.md`; run `git status/log/diff` and list untracked files. The code wins over notes. Say in one line where work resumes.
 If a limit cut work off before a handoff, read the tail of the other agent's transcript: `~/.claude/projects/<path-slug>/*.jsonl` or `~/.codex/sessions/YYYY/MM/DD/*.jsonl`.
 
