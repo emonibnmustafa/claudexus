@@ -51,3 +51,13 @@ After each task add 1–3 lessons to `~/.config/claudexus/LESSONS.md` (create it
 
 ## Quality bar
 Verified results, not claims. Match the surrounding code. Fix root causes. Verify UI visually. Report honestly what was and wasn't checked.
+
+## Tooling notes (learned the hard way)
+- **Link the Codex chat first.** Until `claudexus link` runs, `claudexus task` runs Codex headless and the owner's Codex-app chat stays empty. The owner must create the chat in the Codex app with the exact first message from Bootstrap step 3.
+- **OpenCode needs a model.** Set `CLAUDEXUS_OPENCODE_MODEL=opencode/<model>` (list them with `opencode-cli models`; a free DeepSeek flash model works for mechanical kit work) before `claudexus task --agent opencode …`.
+- **Fix rounds reuse the worktree.** `claudexus task [--agent …] <id> <fix-brief.md> medium agent/<id>` re-enters the existing `.worktrees/<id>`; the fix brief lists the findings and says "continue on top of your commit".
+- **Headless Codex cannot commit** in some sandboxes (`index.lock`); it leaves files untracked. The supervisor commits what it reviewed.
+- **Moving a session to a new folder copies files but not `.git`.** Restore with `git clone --no-checkout <old> tmp && mv tmp/.git <new>/`, then `git reset`.
+- **Unicode:** file-name sanitizers must keep ZWJ/ZWNJ (U+200D/U+200C); stripping them corrupts Bangla and Persian names.
+- **Visual check without a browser pane:** headless Chrome `--screenshot --virtual-time-budget=3000` renders static mockups (the browser pane cannot open `file://` outside the project).
+- **Briefs for parallel agents** start with a shared header (stack, TDD, commit rules, files not to touch, report location) followed by the plan's task text.
