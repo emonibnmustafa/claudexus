@@ -31,7 +31,7 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 ## Budget control (supervisor)
 - Check both limits at each owner message, before each delegation and between steps. Claude: `/usage` (or the `get_usage` tool in the desktop app). Codex: `claudexus usage`. OpenCode free models have no usage limit.
 - Claude above ~70%: push more work to Codex and cheap subagents. Codex above ~80%: effort to medium (never below), smaller tasks, or hold Codex work until its reset and use subagents. Claude can't switch its own session model; the owner can.
-- Check Codex's progress in the shared chat or its log, not by blind waiting.
+- While agents work, run `claudexus watch` in the background (polls every 2 min): it exits when Codex finishes, asks for a decision, or stalls, or when an OpenCode task ends. Answer questions yourself where safe (autonomy rule), then restart the watch.
 
 ## Handoff
 Don't write continuity files continuously; it burns usage. At **95%** of the 5-hour limit (or when told "handoff"), write the full handoff once into `docs/continuity/CURRENT.md` plus a `JOURNAL.md` entry; above 90% start no big new step. A handoff contains: the owner's request verbatim with later scope changes, approvals and prohibitions; numbered steps with status (`planned → in progress → implemented → verified`, `blocked`, `needs decision`); the exact next action; decisions and reasons; assumptions kept apart from owner instructions; changed **and untracked** files; what was verified on which commit; open questions; both agents' reset times.

@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""claudexus watch — supervises running agents without spending supervisor turns.
+
+Polls the repo's shared Codex chat log and running OpenCode tasks every INTERVAL seconds, prints one status line
+per change, and EXITS (so the supervisor wakes up) when something needs attention:
+  done      Codex finished a turn (report ready)
+  question  Codex's latest message asks for a decision or approval
+  stalled   no new Codex activity for STALL minutes while a turn is open
+  opencode  a watched OpenCode task finished
+Usage: claudexus watch [interval-sec=120] [stall-min=15]
+"""
+import json, os, re, subprocess, sys, time
+
+here = os.path.dirname(os.path.realpath(__file__))
+interval = int(sys.argv[1]) if len(sys.argv) > 1 else 120
+stall = int(sys.argv[2]) if len(sys.argv) > 2 else 15
+repo = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+state = os.path.join(here, "_codex_state.py")
+
+def codex_log():
+    tid = os.path.join(repo, ".team", "codex-thread-id")
+    if not os.path.exists(tid):
+        return None
+    return subprocess.check_output(["python3", state, "log", open(tid).read().strip()], text=True).strip()
+
+def scan(log):
+    """(turn open?, completed turns, last activity time, latest agent text)"""
+    started = completed = 0; text = ""
+    for line in open(log):
+        try:
+            p = json.loads(line).get("payload", {})
+        except ValueError:
+            continue
+        t = p.get("type")
+        if t == "task_started": started += 1
+        elif t == "task_complete": completed += 1; text = p.get("last_agent_message") or text
+        elif t == "message" and p.get("role") == "assistant":
+            parts = [c.get("text", "") for c in p.get("content", []) if isinstance(c, dict)]
+            text = " ".join(parts) or text
+    return started > completed, completed, os.path.getmtime(log), text
+
+def opencode_running():
+    out = subprocess.run(["pgrep", "-fl", "opencode-cli run"], capture_output=True, text=True).stdout
+    return len([l for l in out.splitlines() if "claudexus" in l or " run " in l])
+
+ASK = re.compile(r"\?\s*$|\b(should I|do you want|which (one|option)|need (a|your) decision|approve|confirm)\b", re.I)
+
+log = codex_log()
+base = scan(log)[1] if log else 0
+oc_before = opencode_running()
+last_line = ""
+while True:
+    now = time.strftime("%H:%M")
+    parts = []
+    if log:
+        open_turn, done, mtime, text = scan(log)
+        idle = int((time.time() - mtime) / 60)
+        parts.append("codex " + ("working" if open_turn else "idle") + (f", quiet {idle}m" if idle else ""))
+        if done > base:
+            print(f"{now} codex done: {text[:300]}"); print("EVENT done"); sys.exit(0)
+        if not open_turn and text and ASK.search(text[-400:]):
+            print(f"{now} codex asks: {text[-400:]}"); print("EVENT question"); sys.exit(0)
+        if open_turn and idle >= stall:
+            print(f"{now} codex quiet for {idle} min"); print("EVENT stalled"); sys.exit(0)
+    oc = opencode_running()
+    parts.append(f"opencode tasks {oc}")
+    if oc < oc_before:
+        print(f"{now} an OpenCode task finished"); print("EVENT opencode"); sys.exit(0)
+    oc_before = oc
+    line = "; ".join(parts)
+    if line != last_line:
+        print(f"{now} {line}", flush=True); last_line = line
+    time.sleep(interval)

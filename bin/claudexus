@@ -3,7 +3,7 @@
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 cmd="${1:-help}"; shift 2>/dev/null || true
 case "$cmd" in
-  init|link|task|usage|doctor) exec "$here/claudexus-$cmd" "$@" ;;
+  init|link|task|usage|doctor|watch) exec "$here/claudexus-$cmd" "$@" ;;
   *) cat <<USAGE
 claudexus — Claude Code leads, Codex works.
 
@@ -12,6 +12,8 @@ claudexus — Claude Code leads, Codex works.
   claudexus task [--agent codex|opencode] <id> <brief.md> [medium|high|xhigh] [base-ref] [timeout-min]
                                 hand a task to Codex (default) or OpenCode in its own git worktree
   claudexus usage                 Codex 5-hour and weekly usage
+  claudexus watch [sec] [stall-min]
+                                poll Codex/OpenCode; exit when done, asking, or stalled
   claudexus doctor                check requirements
 USAGE
   ;;
