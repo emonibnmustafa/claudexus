@@ -20,6 +20,9 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 - `claudexus task <id> <brief.md> [effort]` creates `.worktrees/<id>` on branch `agent/<id>`, sends the brief to Codex, waits, and saves Codex's reply to `docs/continuity/tasks/<id>.report.md`.
 - A good brief: goal, files/area, constraints, acceptance criteria, how to verify. For new work, **ask for a design first** (no file changes), decide, then build.
 - Batch review fixes and the next step into one brief; every round trip costs supervisor usage.
+- **Parallel tasks:** independent tasks run at the same time, each in its own worktree cut from one *committed* base ref (commit the briefs first). Agents leave their report uncommitted; only the supervisor merges, one branch at a time, after review. A brief names the files the agent must not touch.
+- **Review every delegated diff**, most of all OpenCode/free-model output: in practice nearly every task had real findings (cookie leaked to subdomains, integer-overflow traps, missing retries). Send findings back as a fix brief to the same engine; keep a fix-round cap.
+- **Preflight scan:** before round 1, list every type or file two tasks share; plans routinely use a type before the task that defines it. Rule on each conflict in the ledger.
 - Supervisor reviews the diff **and the real output** (run it, look at screenshots, read the data): passing tests are not proof that a feature means something. Then commit and merge, or send it back once.
 - **Audit trail:** in the owner's chat, write each delegation as `Claude → Codex: …`, `Codex → Claude: …`, `Decision: …`. The full exchange is in the shared Codex chat.
 
@@ -30,6 +33,7 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 
 ## Budget control (supervisor)
 - Check both limits at each owner message, before each delegation and between steps. Claude: `/usage` (or the `get_usage` tool in the desktop app). Codex: `claudexus usage`. OpenCode free models have no usage limit.
+- **Saving mode** (owner-set thresholds): Claude below 25% left → spawn no Claude subagents; implementation *and* reviews go to Codex / OpenCode. At ~7% left start no new work, let running Codex/OpenCode tasks finish, then tell the owner; keep 4–5% free so the owner can still talk to Claude. Check usage at every step.
 - Claude above ~70%: push more work to Codex and cheap subagents. Codex above ~80%: effort to medium (never below), smaller tasks, or hold Codex work until its reset and use subagents. Claude can't switch its own session model; the owner can.
 - While agents work, run `claudexus watch` in the background (polls every 2 min): it exits when Codex finishes, asks for a decision, or stalls, or when an OpenCode task ends. Codex can still open a question widget in the app (`request_user_input`) that blocks it: the watch reports it; answer it in the Codex app right away (computer use: type the decision in the question's response field, then Send), then restart the watch. Never leave an agent waiting.
 
