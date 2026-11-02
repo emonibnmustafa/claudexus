@@ -28,6 +28,7 @@ $(cat "$brief")
 Standing rules for this delegated task:
 - Read AGENTS.md first and follow its conventions. Stay inside the worktree named above.
 - Leave your changes uncommitted unless the brief says otherwise; the supervisor reviews and commits. Never push or touch the main checkout.
+- Never stop to ask questions (no request_user_input): choose the safe, backward-compatible option yourself, state it in your report, and keep going.
 - Verify what the brief asks (build/tests/screenshots). Never claim a check you did not run.
 - Final message = a short report to Claude: what changed (files), what you verified and how, what is uncertain or left, and any decision you need."
 

@@ -25,19 +25,23 @@ def codex_log():
 
 def scan(log):
     """(turn open?, completed turns, last activity time, latest agent text)"""
-    started = completed = 0; text = ""
+    started = completed = 0; text = ""; asks = {}
     for line in open(log):
         try:
             p = json.loads(line).get("payload", {})
         except ValueError:
             continue
         t = p.get("type")
+        if t == "function_call" and str(p.get("name", "")).startswith("request_user_input"):
+            asks[p.get("call_id") or p.get("id")] = p.get("arguments", "")
+        elif t == "function_call_output" and p.get("call_id") in asks:
+            asks.pop(p.get("call_id"))
         if t == "task_started": started += 1
         elif t == "task_complete": completed += 1; text = p.get("last_agent_message") or text
         elif t == "message" and p.get("role") == "assistant":
             parts = [c.get("text", "") for c in p.get("content", []) if isinstance(c, dict)]
             text = " ".join(parts) or text
-    return started > completed, completed, os.path.getmtime(log), text
+    return started > completed, completed, os.path.getmtime(log), text, list(asks.values())
 
 def opencode_running():
     out = subprocess.run(["pgrep", "-fl", "opencode-cli run"], capture_output=True, text=True).stdout
@@ -47,13 +51,20 @@ ASK = re.compile(r"\?\s*$|\b(should I|do you want|which (one|option)|need (a|you
 
 log = codex_log()
 base = scan(log)[1] if log else 0
+answered = set()
 oc_before = opencode_running()
 last_line = ""
 while True:
     now = time.strftime("%H:%M")
     parts = []
     if log:
-        open_turn, done, mtime, text = scan(log)
+        open_turn, done, mtime, text, pending = scan(log)
+        # Codex's question widget (request_user_input) blocks it until someone answers in the app.
+        fresh = [q for q in pending if q not in answered]
+        if fresh:
+            try: q = json.loads(fresh[-1]).get("questions", [{}])[0]
+            except ValueError: q = {"title": fresh[-1]}
+            print(f"{now} codex asks (in the app): {str(q)[:600]}"); print("EVENT question"); sys.exit(0)
         idle = int((time.time() - mtime) / 60)
         parts.append("codex " + ("working" if open_turn else "idle") + (f", quiet {idle}m" if idle else ""))
         if done > base:
