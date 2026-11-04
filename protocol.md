@@ -20,6 +20,9 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 - `claudexus task <id> <brief.md> [effort]` creates `.worktrees/<id>` on branch `agent/<id>`, sends the brief to Codex, waits, and saves Codex's reply to `docs/continuity/tasks/<id>.report.md`.
 - A good brief: goal, files/area, constraints, acceptance criteria, how to verify. For new work, **ask for a design first** (no file changes), decide, then build.
 - Batch review fixes and the next step into one brief; every round trip costs supervisor usage.
+- **Parallel tasks:** independent tasks run at the same time, each in its own worktree cut from one *committed* base ref (commit the briefs first). Agents leave their report uncommitted; only the supervisor merges, one branch at a time, after review. A brief names the files the agent must not touch.
+- **Review every delegated diff**, most of all OpenCode/free-model output: in practice nearly every task had real findings (cookie leaked to subdomains, integer-overflow traps, missing retries). Send findings back as a fix brief to the same engine; keep a fix-round cap.
+- **Preflight scan:** before round 1, list every type or file two tasks share; plans routinely use a type before the task that defines it. Rule on each conflict in the ledger.
 - Supervisor reviews the diff **and the real output** (run it, look at screenshots, read the data): passing tests are not proof that a feature means something. Then commit and merge, or send it back once.
 - **Audit trail:** in the owner's chat, write each delegation as `Claude → Codex: …`, `Codex → Claude: …`, `Decision: …`. The full exchange is in the shared Codex chat.
 
@@ -30,6 +33,7 @@ Owner preferences (language, tone, personal rules): read `~/.config/claudexus/ow
 
 ## Budget control (supervisor)
 - Check both limits at each owner message, before each delegation and between steps. Claude: `/usage` (or the `get_usage` tool in the desktop app). Codex: `claudexus usage`. OpenCode free models have no usage limit.
+- **Saving mode** (owner-set thresholds): Claude below 25% left → spawn no Claude subagents; implementation *and* reviews go to Codex / OpenCode. At ~7% left start no new work, let running Codex/OpenCode tasks finish, then tell the owner; keep 4–5% free so the owner can still talk to Claude. Check usage at every step.
 - Claude above ~70%: push more work to Codex and cheap subagents. Codex above ~80%: effort to medium (never below), smaller tasks, or hold Codex work until its reset and use subagents. Claude can't switch its own session model; the owner can.
 - While agents work, run `claudexus watch` in the background (polls every 2 min): it exits when Codex finishes, asks for a decision, or stalls, or when an OpenCode task ends. Codex can still open a question widget in the app (`request_user_input`) that blocks it: the watch reports it; answer it in the Codex app right away (computer use: type the decision in the question's response field, then Send), then restart the watch. Never leave an agent waiting.
 
@@ -47,3 +51,13 @@ After each task add 1–3 lessons to `~/.config/claudexus/LESSONS.md` (create it
 
 ## Quality bar
 Verified results, not claims. Match the surrounding code. Fix root causes. Verify UI visually. Report honestly what was and wasn't checked.
+
+## Tooling notes (learned the hard way)
+- **Link the Codex chat first.** Until `claudexus link` runs, `claudexus task` runs Codex headless and the owner's Codex-app chat stays empty. The owner must create the chat in the Codex app with the exact first message from Bootstrap step 3.
+- **OpenCode needs a model.** Set `CLAUDEXUS_OPENCODE_MODEL=opencode/<model>` (list them with `opencode-cli models`; a free DeepSeek flash model works for mechanical kit work) before `claudexus task --agent opencode …`.
+- **Fix rounds reuse the worktree.** `claudexus task [--agent …] <id> <fix-brief.md> medium agent/<id>` re-enters the existing `.worktrees/<id>`; the fix brief lists the findings and says "continue on top of your commit".
+- **Headless Codex cannot commit** in some sandboxes (`index.lock`); it leaves files untracked. The supervisor commits what it reviewed.
+- **Moving a session to a new folder copies files but not `.git`.** Restore with `git clone --no-checkout <old> tmp && mv tmp/.git <new>/`, then `git reset`.
+- **Unicode:** file-name sanitizers must keep ZWJ/ZWNJ (U+200D/U+200C); stripping them corrupts Bangla and Persian names.
+- **Visual check without a browser pane:** headless Chrome `--screenshot --virtual-time-budget=3000` renders static mockups (the browser pane cannot open `file://` outside the project).
+- **Briefs for parallel agents** start with a shared header (stack, TDD, commit rules, files not to touch, report location) followed by the plan's task text.
