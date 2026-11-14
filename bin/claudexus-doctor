@@ -6,6 +6,7 @@ for t in git python3; do command -v $t >/dev/null && ok "$t" || bad "$t is requi
 codex=$(claudexus_codex)
 if [ -n "$codex" ] && [ -x "$codex" ]; then ok "Codex CLI: $codex ($("$codex" --version 2>/dev/null | head -1))"; else bad "Codex CLI not found (install Codex, or set CLAUDEXUS_CODEX in ~/.config/claudexus/config.sh)"; fi
 oc=$(claudexus_opencode); if [ -n "$oc" ]; then ok "OpenCode CLI: $oc ($("$oc" --version 2>/dev/null | head -1))"; else echo "  info OpenCode not found (optional)"; fi
+agy=${CLAUDEXUS_AGY:-$HOME/.local/bin/agy}; if [ -x "$agy" ]; then ok "Antigravity CLI: $agy ($("$agy" --version 2>/dev/null | head -1))"; else echo "  info Antigravity CLI (agy) not found (optional)"; fi
 m=$(claudexus_model); echo "  info Codex model: ${m:-<Codex default>}"
 [ -d "$HOME/.codex" ] && ok "~/.codex" || bad "~/.codex missing: open Codex once and sign in"
 command -v claude >/dev/null && ok "Claude Code CLI" || echo "  info 'claude' not on PATH (fine if you use the desktop app)"
